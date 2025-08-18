@@ -1,0 +1,9 @@
+# $XDG_CONFIG_HOME/wasm-pkg/config.toml
+default_registry = "localhost:5000"
+
+[namespace_registries]
+# Tell wkg that packages with the `docs` namespace are in the local OCI registry
+docs = { registry = "local-registry", metadata = { preferredProtocol = "oci", "oci" = {registry = "localhost:5000", namespacePrefix = "" } } }
+
+[registry.local-registry]
+url = "https://localhost:5000"
