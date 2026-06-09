@@ -112,6 +112,12 @@ vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right win
 vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
 vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
 
+vim.filetype.add {
+  extension = {
+    tmpl = 'templ', -- or "html" depending on your preference
+  },
+}
+
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
 
@@ -283,7 +289,8 @@ require('lazy').setup({
   { -- Fuzzzy Finder (files, lsp, etc)
     'nvim-telescope/telescope.nvim',
     event = 'VimEnter',
-    branch = '0.1.x',
+    branch = 'master',
+    tag = 'v0.2.0',
     dependencies = {
       'nvim-lua/plenary.nvim',
       { -- If encountering errors, see telescope-fzf-native README for installation instructions
@@ -671,6 +678,9 @@ require('lazy').setup({
         javascript = { 'prettier' },
         typescript = { 'prettier' },
         rust = { 'rustfmt' },
+        html = { 'prettier' },
+        gohtml = { 'prettier' },
+        gotmpl = { 'prettier' },
       },
     },
   },
@@ -889,7 +899,6 @@ require('lazy').setup({
   config = function(_, opts)
     require('nvim-treesitter.configs').setup(opts)
   end,
-
 
   -- The following comments only work if you have downloaded the kickstart repo, not just copy pasted the
   -- init.lua. If you want these files, they are in the repository, so you can just download them and
