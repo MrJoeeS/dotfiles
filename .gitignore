@@ -1,5 +1,30 @@
-# Ignore Everything
+# Ignore everything by default.
 *
 
+!/setup.sh
+
+# Neovim configuration and plugin lockfile.
 !/nvim/
+!/nvim/**
+/nvim/doc/tags
+
+# Keep the tmux configuration.
 !/emacs/
+!/tmux/
+!/tmux/**
+
+# Keep shell configuration, but not generated completion dumps.
+!/zsh/
+!/zsh/**
+/zsh/.zcompdump*
+
+# Alacritty configuration.
+!/alacritty/
+!/alacritty/**
+
+# Keep only the personal Emacs entrypoint.
+!/emacs/
+/emacs/**
+!/emacs/init.el
+
+/oh-my-zsh/

@@ -1,0 +1,23 @@
+[window]
+padding = { x = 8, y = 8 }
+dynamic_title = true
+opacity = 0.7
+startup_mode = "Maximized"
+decorations = "none"
+
+[[keyboard.bindings]]
+
+key = "F11"
+action = "ToggleFullscreen"
+
+[general]
+live_config_reload = true
+import = ["~/.config/alacritty/themes/themes/oxocarbon.toml"]
+
+
+[font]
+size = 18.0
+
+# If using in Windows
+# [terminal]
+# shell = { program = "wsl.exe", args = ["~"] }
