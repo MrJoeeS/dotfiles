@@ -112,11 +112,15 @@ vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right win
 vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
 vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
 
-vim.filetype.add {
-  extension = {
-    tmpl = 'templ', -- or "html" depending on your preference
-  },
-}
+vim.filetype.add { extension = { templ = 'templ' } }
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = { 'templ', 'html' },
+  callback = function()
+    vim.bo.tabstop = 2
+    vim.bo.shiftwidth = 2
+    vim.bo.softtabstop = 2
+  end,
+})
 
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
@@ -156,21 +160,11 @@ vim.opt.rtp:prepend(lazypath)
 --
 -- NOTE: Here is where you install your plugins.
 require('lazy').setup({
-  -- NOTE: Plugins can be added with a link (or for a github repo: 'owner/repo' link).
   'tpope/vim-sleuth', -- Detect tabstop and shiftwidth automatically
-
-  -- NOTE: Plugins can also be added by using a table,
-  -- with the first argument being the link and the following
-  -- keys can be used to configure plugin behavior/loading/etc.
-  --
-  -- Use `opts = {}` to force a plugin to be loaded.
-  --
-
-  -- Here is a more advanced example where we pass configuration
-  -- options to `gitsigns.nvim`. This is equivalent to the following Lua:
-  --    require('gitsigns').setup({ ... })
-  --
-  -- See `:help gitsigns` to understand what the configuration keys do
+  {
+    'christoomey/vim-tmux-navigator',
+    lazy = false,
+  },
   { -- Adds git related signs to the gutter, as well as utilities for managing changes
     'lewis6991/gitsigns.nvim',
     opts = {
@@ -184,23 +178,63 @@ require('lazy').setup({
     },
   },
   {
-    'zbirenbaum/copilot-cmp',
+    'github/copilot.vim',
     event = 'InsertEnter',
     config = function()
-      require('copilot_cmp').setup()
-    end,
-    dependencies = {
-      'zbirenbaum/copilot.lua',
-      cmd = 'Copilot',
-      config = function()
-        require('copilot').setup {
-          suggestion = { enabled = false },
-          panel = { enabled = false },
-        }
-      end,
-    },
-  },
+      vim.keymap.set('i', '<C-J>', 'copilot#Accept("\\<CR>")', {
+        expr = true,
+        replace_keycodes = false,
+      })
+      vim.g.copilot_no_tab_map = true
 
+      -- Panel and Chat with <leader>cp, <leader>cc
+      vim.api.nvim_set_keymap('n', '<leader>cp', ':Copilot panel<CR>', { noremap = true, silent = true, desc = 'Copilot: Panel' })
+      vim.api.nvim_set_keymap('n', '<leader>cc', ':Copilot chat<CR>', { noremap = true, silent = true, desc = 'Copilot: Chat' })
+
+      -- Enable/Disable Copilot
+      vim.api.nvim_set_keymap('n', '<leader>ce', ':Copilot enable<CR>', { noremap = true, silent = true, desc = 'Copilot: Enable' })
+      vim.api.nvim_set_keymap('n', '<leader>cd', ':Copilot disable<CR>', { noremap = true, silent = true, desc = 'Copilot: Disable' })
+    end,
+  },
+  -- {
+  --   'zbirenbaum/copilot-cmp',
+  --   event = 'InsertEnter',
+  --   config = function()
+  --     require('copilot_cmp').setup()
+  --   end,
+  --   dependencies = {
+  --     'zbirenbaum/copilot.lua',
+  --     cmd = 'Copilot',
+  --     config = function()
+  --       require('copilot').setup {
+  --         suggestion = {
+  --           enabled = false,
+  --         },
+  --         panel = { enabled = false },
+  --       }
+  --     end,
+  --   },
+  -- },
+  -- {
+  --   'zbirenbaum/copilot.lua',
+  --   cmd = 'Copilot',
+  --   event = 'InsertEnter',
+  --   config = function()
+  --     require('copilot').setup {}
+  --   end,
+  -- },
+  {
+    'nvim-orgmode/orgmode',
+    event = 'VeryLazy',
+    ft = { 'org' },
+    config = function()
+      -- Setup orgmode
+      require('orgmode').setup {
+        org_agenda_files = '~/notes/**/*',
+        org_default_notes_file = '~/notes/refile.org',
+      }
+    end,
+  },
   {
     'kevinhwang91/nvim-ufo',
     dependencies = {
@@ -289,8 +323,7 @@ require('lazy').setup({
   { -- Fuzzzy Finder (files, lsp, etc)
     'nvim-telescope/telescope.nvim',
     event = 'VimEnter',
-    branch = 'master',
-    tag = 'v0.2.0',
+    version = '*',
     dependencies = {
       'nvim-lua/plenary.nvim',
       { -- If encountering errors, see telescope-fzf-native README for installation instructions
@@ -572,6 +605,7 @@ require('lazy').setup({
       local servers = {
         -- clangd = {},
         gopls = {},
+        templ = {},
         pyright = {},
         rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
@@ -581,8 +615,22 @@ require('lazy').setup({
         --
         -- But for many setups, the LSP (`ts_ls`) will work just fine
         ts_ls = {},
-        html = {},
-        htmx = {},
+        html = {
+          filetypes = { 'html', 'templ' },
+        },
+        htmx = {
+          filetypes = { 'html', 'templ' },
+        },
+        tailwindcss = {
+          filetypes = { 'templ', 'astro', 'javascript', 'typescript', 'react' },
+          settings = {
+            tailwindCSS = {
+              includeLanguages = {
+                templ = 'html',
+              },
+            },
+          },
+        },
         --
 
         lua_ls = {
@@ -617,12 +665,15 @@ require('lazy').setup({
       local ensure_installed = vim.tbl_keys(servers or {})
       vim.list_extend(ensure_installed, {
         'stylua', -- Used to format Lua code
+        'html-lsp',
+        'htmx-lsp',
+        'tailwindcss-language-server',
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
       require('mason-lspconfig').setup {
         automatic_installation = true,
-        ensure_installed = { 'ts_ls' },
+        ensure_installed = { 'ts_ls', 'html', 'htmx', 'tailwindcss', 'templ' },
         handlers = {
           function(server_name)
             local server = servers[server_name] or {}
@@ -665,7 +716,7 @@ require('lazy').setup({
           lsp_format_opt = 'fallback'
         end
         return {
-          timeout_ms = 500,
+          timeout_ms = 3000,
           lsp_format = lsp_format_opt,
         }
       end,
@@ -678,6 +729,7 @@ require('lazy').setup({
         javascript = { 'prettier' },
         typescript = { 'prettier' },
         rust = { 'rustfmt' },
+        templ = { 'templ' },
         html = { 'prettier' },
         gohtml = { 'prettier' },
         gotmpl = { 'prettier' },
@@ -864,23 +916,8 @@ require('lazy').setup({
     build = ':TSUpdate',
     -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
     opts = {
-      ensure_installed = {
-        'bash',
-        'c',
-        'diff',
-        'html',
-        'lua',
-        'luadoc',
-        'markdown',
-        'markdown_inline',
-        'query',
-        'vim',
-        'vimdoc',
-        'python',
-        'javascript',
-        'typescript',
-        'rust',
-      },
+      ensure_installed = { 'bash', 'c', 'css', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'templ', 'vim', 'vimdoc' },
+      ignore_install = { 'org' },
       -- Autoinstall languages that are not installed
       auto_install = true,
       highlight = {
@@ -912,7 +949,7 @@ require('lazy').setup({
   require 'kickstart.plugins.debug',
   require 'kickstart.plugins.indent_line',
   require 'kickstart.plugins.lint',
-  -- require 'kickstart.plugins.autopairs',
+  require 'kickstart.plugins.autopairs',
   require 'kickstart.plugins.neo-tree',
   -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
 
@@ -964,3 +1001,15 @@ require('cmp').setup {
     -- other sources
   },
 }
+
+vim.keymap.set('n', '<leader>fe', '<cmd>Neotree toggle<CR>', { desc = '[F]ile [E]xplorer: Neo-tree toggle' })
+vim.keymap.set('n', '<leader>fb', '<cmd>Neotree buffers<CR>', { desc = '[F]ile [B]uffers: Neo-tree buffers' })
+vim.keymap.set('n', '<leader>gs', '<cmd>Neotree git_status<CR>', { desc = '[G]it [S]tatus: Neo-tree git status' })
+vim.opt.autoread = true
+vim.cmd [[
+  autocmd FocusGained,BufEnter,CursorHold * checktime
+]]
+
+vim.api.nvim_set_hl(0, 'Normal', { bg = 'none' })
+vim.api.nvim_set_hl(0, 'NormalNC', { bg = 'none' })
+vim.opt.termguicolors = true
